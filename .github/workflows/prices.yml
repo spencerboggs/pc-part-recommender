@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: price-refresh
@@ -15,6 +16,7 @@ concurrency:
 
 jobs:
   refresh:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,8 +26,10 @@ jobs:
       - name: Update prices
         run: node scripts/update-prices.js
       - name: Commit changes
+        id: commit
         run: |
           if git diff --quiet -- site/assets/prices.js; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Prices unchanged."
             exit 0
           fi
@@ -34,3 +38,11 @@ jobs:
           git add site/assets/prices.js
           git commit -m "Refresh component prices"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy updated site
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # A GITHUB_TOKEN push does not trigger the push workflow, so ask Pages to deploy explicitly.
+        run: gh workflow run pages.yml --ref "${{ github.event.repository.default_branch }}"
