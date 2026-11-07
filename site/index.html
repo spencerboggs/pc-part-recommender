@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-theme-mode="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Enter your current PC parts and budget to see which upgrades are worth buying.">
+  <meta name="color-scheme" content="dark light">
+  <title>PC Upgrade Advisor | Spencer Boggs</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Idiqlat:wght@200;300;400&display=swap" rel="stylesheet">
+  <script src="assets/theme.js"></script>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="Back to the portfolio">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <rect x="6.5" y="6.5" width="11" height="11" rx="1.5"></rect>
+          <rect x="9.5" y="9.5" width="5" height="5" rx="0.8"></rect>
+          <path d="M9 3v2M12 3v2M15 3v2M9 19v2M12 19v2M15 19v2M3 9h2M3 12h2M3 15h2M19 9h2M19 12h2M19 15h2"></path>
+        </svg>
+        <span>PC Upgrade Advisor</span>
+        <small>v1.0</small>
+      </a>
+      <div class="header-actions">
+        <span class="mode-tag" id="mode-tag">browser</span>
+        <a class="btn btn-sm btn-ghost web-only" id="header-download" href="https://github.com/spencerboggs/pc-part-recommender/releases/latest/download/PC-Upgrade-Advisor.exe" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"></path></svg>
+          Download .exe
+        </a>
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to light theme">
+          <svg data-theme-icon="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" hidden>
+            <circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"></path>
+          </svg>
+          <svg data-theme-icon="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M20 14.5A8 8 0 0 1 9.5 4a8.2 8.2 0 1 0 10.5 10.5Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <div>
+          <p class="kicker">PC upgrade planner</p>
+          <h1>See which upgrades <em>are worth buying.</em></h1>
+          <p class="hero-lede">
+            Enter your current parts, set a budget, and choose what you use the PC for.
+            The planner recommends parts that fit and shows the expected gain.
+          </p>
+          <ul class="hero-tags">
+            <li><b id="cpu-count">50+</b> CPUs in the catalog</li>
+            <li><b id="gpu-count">50+</b> GPUs in the catalog</li>
+            <li><b>Budget</b> never exceeded</li>
+            <li><b>No account</b> required</li>
+          </ul>
+        </div>
+        <div class="hero-side">
+          <div class="hero-fact">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"></rect><path d="M8 20h8M12 16v4"></path></svg>
+            <p><b>Browser</b>Enter each part. The form checks it against the catalog as you type.</p>
+          </div>
+          <div class="hero-fact web-only">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"></path></svg>
+            <p><b>Windows app</b>Reads the CPU, GPU, memory and drives. Every detected value can be edited.</p>
+          </div>
+          <div class="hero-fact desktop-only">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"></path></svg>
+            <p><b>Desktop</b>Hardware was read from this PC. Edit any field to test another build.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Release asset: PC-Upgrade-Advisor.exe. -->
+    <section class="container download-band web-only" aria-labelledby="download-heading">
+      <div class="download-copy">
+        <p class="kicker">Windows app, v1.0.0</p>
+        <h2 id="download-heading">Download the Windows app</h2>
+        <p>
+          The app reads your processor, graphics card, memory and drives, then fills this form.
+          Review the values and change anything that is incorrect. It runs offline and does not need an installer.
+        </p>
+      </div>
+      <ul class="download-points">
+        <li>Reads CPU, GPU, memory and drive models</li>
+        <li>Every detected value remains editable</li>
+        <li>PSU wattage is entered manually</li>
+      </ul>
+      <div class="download-card">
+        <span class="download-file">PC-Upgrade-Advisor.exe</span>
+        <a class="btn btn-primary btn-lg btn-block" href="https://github.com/spencerboggs/pc-part-recommender/releases/latest/download/PC-Upgrade-Advisor.exe" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"></path></svg>
+          Download the .exe
+        </a>
+        <a class="download-release" href="https://github.com/spencerboggs/pc-part-recommender/releases/latest" target="_blank" rel="noopener noreferrer">Release notes and older versions</a>
+        <p class="download-meta">Version 1.0.0 · 98 MB<br>Windows 10 / 11 · 64-bit · no installer</p>
+      </div>
+    </section>
+
+    <div class="container workspace">
+      <div class="work-main">
+        <section class="panel" aria-labelledby="hardware-heading">
+          <header class="panel-head">
+            <div>
+              <p class="kicker">01. Your hardware</p>
+              <h2 id="hardware-heading">Your current parts</h2>
+              <p>Enter the CPU first. The catalog suggests matches as you type.</p>
+            </div>
+            <button class="btn btn-sm desktop-only" id="scan-btn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"></path></svg>
+              Scan this PC
+            </button>
+          </header>
+
+          <p class="panel-note web-only">
+            In the browser version, enter your parts manually. The Windows app fills this form automatically.
+          </p>
+          <div class="scan-line" id="scan-line" role="status" aria-live="polite">
+            <span class="dot"></span><span id="scan-text">Reading hardware…</span>
+          </div>
+
+          <div class="hw-grid">
+            <!-- CPU -->
+            <div class="part-card span-2" id="cpu-card" data-part="cpu">
+              <div class="part-head">
+                <span class="part-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"></rect><rect x="9.5" y="9.5" width="5" height="5" rx="0.8"></rect><path d="M9 2.5V6M15 2.5V6M9 18v3.5M15 18v3.5M2.5 9H6M2.5 15H6M18 9h3.5M18 15h3.5"></path></svg>
+                  Processor
+                </span>
+                <span class="status" id="cpu-status" data-status="idle"><span class="dot"></span><span class="status-text">Not set</span></span>
+              </div>
+              <div class="field">
+                <label for="cpu-model">CPU model</label>
+                <div class="combo">
+                  <input class="input" id="cpu-model" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. Ryzen 7 9800X3D">
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="cpu-cores">Cores</label>
+                  <input class="input mini-input" id="cpu-cores" type="number" min="1" max="128" step="1" inputmode="numeric" placeholder="8">
+                </div>
+                <div class="field">
+                  <label for="cpu-threads">Threads</label>
+                  <input class="input mini-input" id="cpu-threads" type="number" min="1" max="256" step="1" inputmode="numeric" placeholder="16">
+                </div>
+              </div>
+              <div class="meta-chips" id="cpu-meta"></div>
+            </div>
+
+            <!-- GPU -->
+            <div class="part-card" id="gpu-card" data-part="gpu">
+              <div class="part-head">
+                <span class="part-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="6" width="19" height="11" rx="1.5"></rect><circle cx="9" cy="11.5" r="2.4"></circle><path d="M14 9h4M14 12h4M14 15h2M6 17v3M10 17v3"></path></svg>
+                  Graphics card
+                </span>
+                <span class="status" id="gpu-status" data-status="idle"><span class="dot"></span><span class="status-text">Not set</span></span>
+              </div>
+              <div class="field">
+                <label for="gpu-model">GPU model</label>
+                <div class="combo">
+                  <input class="input" id="gpu-model" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. GeForce RTX 4070">
+                </div>
+              </div>
+              <div class="field">
+                <label for="gpu-vendor">Vendor</label>
+                <select class="select" id="gpu-vendor">
+                  <option value="">Auto / unknown</option>
+                  <option value="NVIDIA">NVIDIA</option>
+                  <option value="AMD">AMD</option>
+                  <option value="Intel">Intel</option>
+                </select>
+              </div>
+              <div class="meta-chips" id="gpu-meta"></div>
+            </div>
+
+            <!-- RAM -->
+            <div class="part-card" id="ram-card" data-part="ram">
+              <div class="part-head">
+                <span class="part-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="7" width="19" height="10" rx="1"></rect><path d="M6 17v3M10 17v3M14 17v3M18 17v3M7 10v4M11 10v4M15 10v4M19 10v4"></path></svg>
+                  Memory
+                </span>
+                <span class="status" id="ram-status" data-status="idle"><span class="dot"></span><span class="status-text">Not set</span></span>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="ram-size">Total RAM (GB)</label>
+                  <input class="input mini-input" id="ram-size" type="number" min="2" max="512" step="1" inputmode="numeric" placeholder="32">
+                </div>
+                <div class="field">
+                  <label for="ram-type">Type / speed</label>
+                  <div class="combo">
+                    <input class="input" id="ram-type" type="text" autocomplete="off" spellcheck="false" placeholder="DDR5-6000">
+                  </div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="ram-slots-used">Slots used</label>
+                  <input class="input mini-input" id="ram-slots-used" type="number" min="1" max="8" step="1" inputmode="numeric" value="2">
+                </div>
+                <div class="field">
+                  <label for="ram-slots-total">Slots total</label>
+                  <input class="input mini-input" id="ram-slots-total" type="number" min="1" max="8" step="1" inputmode="numeric" value="4">
+                </div>
+              </div>
+              <div class="meta-chips" id="ram-meta"></div>
+            </div>
+
+            <!-- Storage -->
+            <div class="part-card span-2" id="storage-card" data-part="storage">
+              <div class="part-head">
+                <span class="part-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.3"></rect><rect x="3" y="13" width="18" height="7" rx="1.3"></rect><path d="M7 7.5h.01M7 16.5h.01M11 7.5h6M11 16.5h6"></path></svg>
+                  Storage
+                </span>
+                <span class="status" id="storage-status" data-status="idle"><span class="dot"></span><span class="status-text">Not set</span></span>
+              </div>
+              <div class="drive-list" id="drive-list"></div>
+              <button class="btn btn-sm drive-add" id="add-drive" type="button" style="align-self:flex-start">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                Add another drive
+              </button>
+              <p class="part-help">Model is optional if you only want capacity-based advice. Capacities are in gigabytes.</p>
+            </div>
+
+            <!-- PSU -->
+            <div class="part-card" id="psu-card" data-part="psu">
+              <div class="part-head">
+                <span class="part-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="1.5"></rect><path d="M6 10h5M6 14h8M18 9.5v5"></path></svg>
+                  Power supply
+                </span>
+                <span class="status" id="psu-status" data-status="idle"><span class="dot"></span><span class="status-text">Optional</span></span>
+              </div>
+              <div class="field">
+                <label for="psu-model">PSU model</label>
+                <div class="combo">
+                  <input class="input" id="psu-model" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. Corsair RM850e">
+                </div>
+              </div>
+              <div class="field">
+                <label for="psu-wattage">Wattage</label>
+                <input class="input mini-input" id="psu-wattage" type="number" min="100" max="3000" step="50" inputmode="numeric" placeholder="850">
+              </div>
+              <div class="meta-chips" id="psu-meta"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="work-side">
+        <section class="panel settings-panel" aria-labelledby="settings-heading">
+          <header class="panel-head">
+            <div>
+              <p class="kicker">02. Planning</p>
+              <h2 id="settings-heading">Budget and priority</h2>
+            </div>
+          </header>
+          <div class="settings-body">
+            <div>
+              <div class="budget-display">
+                <div class="budget-figure">
+                  <span class="budget-currency" aria-hidden="true">$</span>
+                  <input class="budget-input" id="budget" type="number" min="100" max="20000" step="50" value="1000" inputmode="numeric" aria-label="Upgrade budget in US dollars">
+                </div>
+                <span class="budget-sub">USD</span>
+              </div>
+              <input class="budget-slider" id="budget-slider" type="range" min="100" max="5000" step="50" value="1000" aria-label="Upgrade budget">
+              <div class="preset-row" role="group" aria-label="Budget presets">
+                <button class="preset" type="button" data-budget="600">$600</button>
+                <button class="preset is-active" type="button" data-budget="1000">$1,000</button>
+                <button class="preset" type="button" data-budget="1500">$1,500</button>
+                <button class="preset" type="button" data-budget="2500">$2,500</button>
+              </div>
+            </div>
+
+            <div class="field-divider" aria-hidden="true"></div>
+
+            <div>
+              <span class="field-label" id="profile-label">What do you use this PC for?</span>
+              <div class="choice-grid" id="profile-grid" role="radiogroup" aria-labelledby="profile-label">
+                <label class="choice"><input type="radio" name="profile" value="balanced" checked><span class="choice-body"><span class="choice-title">Balanced</span><span class="choice-note"></span></span></label>
+                <label class="choice"><input type="radio" name="profile" value="fidelity"><span class="choice-body"><span class="choice-title">Visual fidelity</span><span class="choice-note"></span></span></label>
+                <label class="choice"><input type="radio" name="profile" value="competitive"><span class="choice-body"><span class="choice-title">Competitive gaming</span><span class="choice-note"></span></span></label>
+                <label class="choice"><input type="radio" name="profile" value="creation"><span class="choice-body"><span class="choice-title">Content creation</span><span class="choice-note"></span></span></label>
+                <label class="choice"><input type="radio" name="profile" value="render"><span class="choice-body"><span class="choice-title">3D &amp; rendering</span><span class="choice-note"></span></span></label>
+                <label class="choice"><input type="radio" name="profile" value="aiml"><span class="choice-body"><span class="choice-title">AI &amp; ML</span><span class="choice-note"></span></span></label>
+                <label class="choice"><input type="radio" name="profile" value="everyday"><span class="choice-body"><span class="choice-title">Everyday use</span><span class="choice-note"></span></span></label>
+              </div>
+            </div>
+
+            <div class="cta-wrap">
+              <button class="btn btn-primary btn-lg btn-block" id="find-btn" type="button" disabled>
+                Find upgrades
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+              </button>
+              <p class="readiness" id="readiness" data-ready="false">
+                <span class="dot"></span>
+                <span id="readiness-text">Add a CPU, GPU and memory to continue.</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="readout-heading" style="margin-top:1rem">
+          <header class="panel-head" style="padding-bottom:0.7rem">
+            <div>
+              <p class="kicker">Live</p>
+              <h2 id="readout-heading" style="font-size:1rem">Build readout</h2>
+            </div>
+          </header>
+          <div class="readout" id="readout">
+            <p class="part-help">Enter parts to see their relative scores.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="container results" id="results" hidden aria-live="polite">
+      <div class="results-head">
+        <div>
+          <p class="kicker">03. Results</p>
+          <h2 id="results-heading">Upgrade plan</h2>
+        </div>
+        <p class="results-meta" id="results-meta"></p>
+      </div>
+
+      <div class="metrics" id="result-metrics"></div>
+
+      <div class="results-grid">
+        <div class="panel table-panel">
+          <div class="table-cap">
+            <h3>Recommended parts</h3>
+            <span id="table-sub">GPU, CPU and memory are checked at Newegg; storage and PSU are estimates.</span>
+          </div>
+          <div class="table-scroll">
+            <table class="upgrades" id="upgrade-table">
+              <thead>
+                <tr>
+                  <th scope="col">Component</th>
+                  <th scope="col">You have</th>
+                  <th scope="col" class="th-upgrade">Upgrade to</th>
+                  <th scope="col" class="num">Est. gain</th>
+                  <th scope="col" class="num">Price</th>
+                </tr>
+              </thead>
+              <tbody id="upgrade-body"></tbody>
+              <tfoot id="upgrade-foot"></tfoot>
+            </table>
+          </div>
+          <div class="empty-state" id="results-empty" hidden>
+            <h3>No upgrade recommended</h3>
+            <p id="results-empty-text">Your build is already sensible for this budget and priority.</p>
+          </div>
+        </div>
+
+        <aside class="results-side">
+          <div class="side-card">
+            <h3>Summary</h3>
+            <p id="result-verdict"></p>
+          </div>
+          <div class="side-card" id="notes-card">
+            <h3>Before you buy</h3>
+            <ul class="note-list" id="result-notes"></ul>
+          </div>
+          <div class="side-card" id="holds-card">
+            <h3>Kept as is</h3>
+            <div class="hold-list" id="result-holds"></div>
+          </div>
+          <p class="price-disclaimer" id="result-disclaimer"></p>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <p>PC Upgrade Advisor, an independent tool by <a href="/">Spencer Boggs</a>.</p>
+        <div class="footer-links">
+          <a href="/">Portfolio</a>
+          <a href="/fun">Other projects</a>
+          <a href="https://github.com/spencerboggs" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+      <p class="footer-note">
+        Not affiliated with AMD, Intel, NVIDIA or any other vendor. Performance figures are normalized estimates for comparison.
+        GPU, CPU and memory prices are checked Newegg listings; storage and PSU figures are estimates.
+        Check a retailer before buying. Memory and SSD pricing is unusually volatile.
+      </p>
+    </div>
+  </footer>
+
+  <template id="drive-template">
+    <div class="drive-row">
+      <div class="field grow">
+        <label>Drive model</label>
+        <div class="combo">
+          <input class="input drive-model" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. Samsung 990 PRO 2TB">
+        </div>
+        <div class="meta-chips drive-meta"></div>
+      </div>
+      <div class="field">
+        <label>Capacity (GB)</label>
+        <input class="input mini-input drive-cap" type="number" min="0" max="100000" step="250" placeholder="2000">
+      </div>
+      <button class="icon-btn remove-drive" type="button" aria-label="Remove this drive" title="Remove drive">×</button>
+    </div>
+  </template>
+
+  <script src="assets/prices.js"></script>
+  <script src="assets/dataset.js"></script>
+  <script src="assets/engine.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

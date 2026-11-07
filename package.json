@@ -1,0 +1,54 @@
+{
+  "name": "pc-upgrade-advisor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read your PC hardware and get a budget-aware upgrade plan.",
+  "author": "Spencer Boggs",
+  "license": "MIT",
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node scripts/serve.js",
+    "prices": "node scripts/update-prices.js",
+    "icon": "node scripts/make-icon.js",
+    "build:exe": "npm run icon && electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.spencerboggs.pcupgradeadvisor",
+    "productName": "PC Upgrade Advisor",
+    "copyright": "Copyright © 2026 Spencer Boggs",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**/*",
+      "site/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "desktop/icon.ico",
+      "artifactName": "PC-Upgrade-Advisor.exe"
+    },
+    "portable": {
+      "artifactName": "PC-Upgrade-Advisor.exe",
+      "requestExecutionLevel": "user"
+    }
+  }
+}
