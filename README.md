@@ -48,8 +48,8 @@ The page uses relative asset paths, so it works at a project-page URL such as `h
 To publish, push the repo, open **Settings → Pages**, and set the source to **GitHub Actions**. The included workflow uploads `site/` on pushes to `main`.
 
 The header and download section point at the latest GitHub release asset:
-`https://github.com/spencerboggs/pc-part-recommender/releases/latest/download/PC-Upgrade-Advisor.exe`.
-Create a release and attach `release/PC-Upgrade-Advisor.exe` with that exact filename. The link updates automatically for future releases, and the binary stays out of the repository. If the repository name changes, update the two release URLs in `site/index.html`.
+`https://github.com/spencerboggs/pc-part-recommender/releases/latest/download/pc-upgrade-advisor-v1.0.0-windows-x64.exe`.
+Create a release and attach `release/pc-upgrade-advisor-v1.0.0-windows-x64.exe` with that exact filename. The binary stays out of the repository. The asset name includes the package version, so update the two release URLs in `site/index.html` when the version changes. If the repository name changes, update those URLs as well.
 
 ## Desktop app
 
@@ -61,7 +61,7 @@ npm start          # run unpackaged
 npm run build:exe  # portable .exe in release/
 ```
 
-`npm run build:exe` regenerates the icon and runs `electron-builder --win portable`. The portable executable is written to `release/`. Upload that file to the GitHub release described above.
+`npm run build:exe` regenerates the icon and runs `electron-builder --win portable`. The portable executable is written to `release/` as `pc-upgrade-advisor-v<version>-windows-x64.exe`. Upload that file to the GitHub release described above.
 
 The build is a portable executable: no installer, no admin rights. The payload is unpacked to a temp folder at launch.
 

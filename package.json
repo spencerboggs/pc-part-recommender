@@ -44,10 +44,10 @@
         }
       ],
       "icon": "desktop/icon.ico",
-      "artifactName": "PC-Upgrade-Advisor.exe"
+      "artifactName": "pc-upgrade-advisor-v${version}-windows-${arch}.exe"
     },
     "portable": {
-      "artifactName": "PC-Upgrade-Advisor.exe",
+      "artifactName": "pc-upgrade-advisor-v${version}-windows-${arch}.exe",
       "requestExecutionLevel": "user"
     }
   }
