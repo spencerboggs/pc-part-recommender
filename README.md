@@ -29,6 +29,7 @@ scripts/
   serve.js
 .github/workflows/
   pages.yml            Deploys `site/` to GitHub Pages
+  prices.yml           Daily price snapshot refresh + Pages redeploy
 ```
 
 ## Website
@@ -63,8 +64,8 @@ The build is a portable executable: no installer, no admin rights. The payload i
 
 The checked snapshot in `site/assets/prices.js` is generated from ComponentPrices.
 
-- Desktop: on launch, the app reads a cached snapshot from its user-data folder. It fetches a new snapshot when the cache is missing or older than 24 hours. If the fetch fails, the cached or bundled snapshot is used.
-- Website: `.github/workflows/prices.yml` runs at 08:15 UTC (12:15 AM PST), regenerates the snapshot and commits it. The Pages workflow then deploys the change. No page visit is needed for the refresh.
+- Desktop: on launch, the app reads a per-user cache from its user-data folder. It fetches a fresh snapshot only when that cache is missing or its `checked` date is not today's Pacific calendar day. The date shown in results updates for that instance. If the fetch fails, the cached or bundled snapshot is used.
+- Website: ComponentPrices does not allow browser CORS, so the site cannot refresh live in-page. `.github/workflows/prices.yml` runs at 08:15 UTC (12:15 AM PST), regenerates the snapshot, commits it, and redeploys Pages.
 
 Run `npm run prices` to update the snapshot manually.
 
@@ -103,15 +104,17 @@ The planner:
 
 1. Scores the current build for the selected profile.
 2. Builds upgrade candidates per category:
-   - CPUs only within the current socket (no surprise motherboard requirement)
-   - GPUs, DIMM kits and drives from the currently buyable catalog
-   - memory only when it adds capacity the profile can use or a meaningful speed step
-3. Enumerates budget-feasible combinations, including "leave it alone" for every category.
-4. Scores each combination by weighted gain plus a small budget-utilization term, and picks the best.
-5. Adds a PSU only when the chosen CPU + GPU draw requires more wattage than the current unit, and picks the cheapest adequate model.
-6. Returns the plan table, per-row gain, value alternatives, estimated system draw, leftover budget, notes and explicit "left as-is" reasons.
+   - Same-socket CPUs as drop-in upgrades
+   - Cross-socket / AMD↔Intel CPUs as platform bundles that also include a motherboard and, when memory generation changes, a matching RAM kit
+   - GPUs from the currently buyable catalog
+   - Memory kits matched to the effective platform DDR after any CPU choice
+   - Storage only when the user described a current drive
+3. Enumerates budget-feasible combinations, including "leave it alone" for every category. Companion part prices count against the budget.
+4. Scores each combination by weighted gain, a small budget-utilization term, a CPU/GPU balance penalty, and a preference for drop-in CPUs when gains are similar.
+5. Adds a PSU only when the chosen CPU + GPU draw requires more wattage than the current unit, preferring ATX 3.1 units for higher-TDP GPUs.
+6. Returns the plan table, per-row gain, required companion rows, value alternatives, estimated system draw, leftover budget, notes and explicit "left as-is" reasons.
 
-Compatibility notes cover socket ceilings, PSU assumptions, case and connector checks, and current DRAM prices.
+Compatibility notes cover platform switches, cooler/case checks, PSU assumptions, and current DRAM prices.
 
 ## Data and caveats
 

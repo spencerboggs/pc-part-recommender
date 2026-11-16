@@ -2,10 +2,9 @@ const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { detectHardware } = require('./hardware');
-const { fetchPrices } = require('./prices');
+const { fetchPrices, pacificDate } = require('./prices');
 
 const siteEntry = path.join(__dirname, '..', 'site', 'index.html');
-const PRICE_TTL = 24 * 60 * 60 * 1000;
 let mainWindow = null;
 let priceRequest = null;
 
@@ -36,8 +35,9 @@ function writePriceCache(data) {
 
 async function getPrices() {
   const cached = readPriceCache();
-  const fetchedAt = cached ? Date.parse(cached.fetchedAt) : NaN;
-  if (cached && Number.isFinite(fetchedAt) && Date.now() - fetchedAt < PRICE_TTL) {
+  // Refresh once per Pacific calendar day so the date the user sees matches
+  // the day the snapshot was checked, not a rolling 24-hour window.
+  if (cached && cached.checked === pacificDate()) {
     return { ...cached, cached: true };
   }
 

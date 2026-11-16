@@ -66,6 +66,7 @@
     if (kind === 'gpu') return `${item.brand} · ${item.vram} GB · ${item.tdp} W · ${item.buyable ? 'current' : 'legacy'}`;
     if (kind === 'ram') return `${item.gen}-${item.speed} · ${item.capacity} GB · ${item.modules} modules`;
     if (kind === 'storage') return `${item.kind} · ${Math.round(item.capacity / 1000)} TB · ${item.read.toLocaleString()} MB/s`;
+    if (kind === 'motherboard') return `${D.meta.sockets[item.socket] || item.socket} · ${item.chipset} · ${item.ddr} · ${item.form}`;
     if (kind === 'psu') return `${item.wattage} W · ${item.rating}${item.atx31 ? ' · ATX 3.1' : ''}`;
     return '';
   }
@@ -744,6 +745,7 @@
     if (kind === 'gpu') return item.vram + ' GB';
     if (kind === 'ram') return item.capacity + ' GB';
     if (kind === 'storage') return item.kind;
+    if (kind === 'motherboard') return item.chipset || item.socket;
     if (kind === 'psu') return item.wattage + ' W';
     return '';
   }
@@ -755,11 +757,12 @@
     if (row.key === 'gpu' && row.current) currentSpec = `${row.current.brand} · ${row.current.vram} GB · ${row.current.tdp} W`;
     if (row.key === 'ram') currentSpec = '';
     if (row.key === 'storage' && row.current) currentSpec = row.current.item ? row.current.item.kind : 'Capacity only';
+    if (row.key === 'motherboard') currentSpec = 'Existing board';
     if (row.key === 'psu') currentSpec = 'Existing unit';
 
     const gain = row.gain > 0
       ? `<span class="gain">+${Math.round(row.gain * 100)}%</span><span class="gain-bar"><i style="width:${Math.round(row.gain * 100)}%"></i></span>`
-      : '<span class="gain" style="color:var(--color-muted)">supports</span>';
+      : `<span class="gain" style="color:var(--color-muted)">${row.companion ? 'required' : 'supports'}</span>`;
 
     const alt = row.alt
       ? `<span class="alt">Value alternative: <a href="${esc(listingUrl(row.alt.item.model))}" target="_blank" rel="noopener noreferrer">${esc(row.alt.item.model)}</a>, ${E.money(row.alt.price)}</span>`
@@ -850,7 +853,7 @@
 
   function applyPriceData(priceData) {
     if (!priceData || !priceData.prices) return;
-    const parts = D.cpus.concat(D.gpus, D.ramKits, D.storage, D.psus);
+    const parts = D.cpus.concat(D.gpus, D.ramKits, D.storage, D.psus, D.motherboards || []);
     parts.forEach((item) => {
       const price = priceData.prices[item.id];
       if (Number.isFinite(price)) {

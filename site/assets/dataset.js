@@ -201,6 +201,20 @@ window.PCData = (function () {
     { id: 'toshiba-x300-8', model: 'Toshiba X300 8TB', kind: 'HDD', read: 200, capacity: 8000, price: 219, buyable: true }
   ];
 
+  // Representative boards per platform. Used as companion parts when a CPU
+  // recommendation changes socket or memory generation.
+  const motherboards = [
+    { id: 'mb-am5-b650', model: 'MSI B650 Gaming Plus WiFi', brand: 'MSI', socket: 'AM5', chipset: 'B650', ddr: 'DDR5', form: 'ATX', dimms: 4, price: 159, buyable: true },
+    { id: 'mb-am5-x870', model: 'Gigabyte X870 Gaming WiFi6', brand: 'Gigabyte', socket: 'AM5', chipset: 'X870', ddr: 'DDR5', form: 'ATX', dimms: 4, price: 249, buyable: true },
+    { id: 'mb-am4-b550', model: 'MSI B550-A Pro', brand: 'MSI', socket: 'AM4', chipset: 'B550', ddr: 'DDR4', form: 'ATX', dimms: 4, price: 119, buyable: true },
+    { id: 'mb-lga1851-b860', model: 'MSI B860 Gaming Plus WiFi', brand: 'MSI', socket: 'LGA1851', chipset: 'B860', ddr: 'DDR5', form: 'ATX', dimms: 4, price: 169, buyable: true },
+    { id: 'mb-lga1851-z890', model: 'ASUS TUF Gaming Z890-Plus WiFi', brand: 'ASUS', socket: 'LGA1851', chipset: 'Z890', ddr: 'DDR5', form: 'ATX', dimms: 4, price: 289, buyable: true },
+    { id: 'mb-lga1700-b760', model: 'MSI Pro B760-P WiFi', brand: 'MSI', socket: 'LGA1700', chipset: 'B760', ddr: 'DDR5', form: 'ATX', dimms: 4, price: 149, buyable: true },
+    { id: 'mb-lga1700-b760-ddr4', model: 'Gigabyte B760 DS3H DDR4', brand: 'Gigabyte', socket: 'LGA1700', chipset: 'B760', ddr: 'DDR4', form: 'ATX', dimms: 4, price: 129, buyable: true },
+    { id: 'mb-lga1200-b560', model: 'MSI B560M Pro-VDH', brand: 'MSI', socket: 'LGA1200', chipset: 'B560', ddr: 'DDR4', form: 'mATX', dimms: 4, price: 99, buyable: false },
+    { id: 'mb-lga1151-b360', model: 'MSI B360 Gaming Plus', brand: 'MSI', socket: 'LGA1151', chipset: 'B360', ddr: 'DDR4', form: 'ATX', dimms: 4, price: 79, buyable: false }
+  ];
+
   const psus = [
     { id: 'corsair-rm750e', model: 'Corsair RM750e', brand: 'Corsair', wattage: 750, rating: '80+ Gold', atx31: true, price: 109, buyable: true },
     { id: 'corsair-rm850e', model: 'Corsair RM850e', brand: 'Corsair', wattage: 850, rating: '80+ Gold', atx31: true, price: 129, buyable: true },
@@ -286,7 +300,7 @@ window.PCData = (function () {
   };
 
   const priceData = window.PCPriceData;
-  const allParts = cpus.concat(gpus, ramKits, storage, psus);
+  const allParts = cpus.concat(gpus, ramKits, storage, psus, motherboards);
   if (priceData && priceData.prices) {
     allParts.forEach((item) => {
       const price = priceData.prices[item.id];
@@ -310,6 +324,7 @@ window.PCData = (function () {
     gpus,
     ramKits,
     storage,
+    motherboards,
     psus,
     profiles,
     meta: {

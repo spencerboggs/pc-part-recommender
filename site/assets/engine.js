@@ -223,8 +223,36 @@ window.PCEngine = (function () {
   function storageScore(drive) {
     if (!drive) return 0;
     const tier = STORAGE_TIER[drive.kind] || 40;
-    const capacity = Number(drive.capacityGB) || 0;
+    const capacity = Number(drive.capacityGB != null ? drive.capacityGB : drive.capacity) || 0;
     return clamp(tier * 0.74 + clamp(capacity / 4000, 0, 1) * 26, 0, 100);
+  }
+
+  function pickMotherboard(socket, ddr) {
+    return (D.motherboards || [])
+      .filter((m) => m.buyable && m.socket === socket && m.ddr === ddr)
+      .sort((a, b) => a.price - b.price)[0] || null;
+  }
+
+  function pickRequiredRam(ddr, minCapacity, profile) {
+    const need = Math.max(Number(minCapacity) || 0, (profile && profile.ramNeed) || 32);
+    const kits = D.ramKits
+      .filter((k) => k.buyable && k.gen === ddr && k.capacity >= need)
+      .sort((a, b) => a.price - b.price || a.modules - b.modules);
+    return kits.find((k) => k.modules === 2) || kits[0] || null;
+  }
+
+  function pickPsu(needed, preferAtx31) {
+    const pool = D.psus.filter((p) => p.buyable && p.wattage >= needed);
+    if (!pool.length) return null;
+    const preferred = preferAtx31 ? pool.filter((p) => p.atx31) : pool;
+    return (preferred.length ? preferred : pool).sort((a, b) => a.price - b.price || a.wattage - b.wattage)[0];
+  }
+
+  function balancePenalty(cpuAfter, gpuAfter, profile) {
+    if (!profile || profile.weights.gpu < 0.2 || profile.weights.cpu < 0.15) return 0;
+    const gap = Math.abs(cpuAfter - gpuAfter);
+    if (gap <= 22) return 0;
+    return (gap - 22) * 0.09;
   }
 
   // ---------- CPU / GPU composites ----------
@@ -280,25 +308,61 @@ window.PCEngine = (function () {
 
     const notes = [];
     const holds = [];
+    const currentRamGen = input.ram.gen || (cpuNow && cpuNow.ddr) || 'DDR5';
+    const currentCapacity = Number(input.ram.totalGB) || 0;
 
-    // CPU options: same socket only.
+    // CPU options: same-socket drop-ins, plus platform switches that pull in
+    // a motherboard and, when memory generation changes, a matching RAM kit.
     const cpuOpts = [];
+    let sameSocketCount = 0;
+    let platformSwitchCount = 0;
     if (cpuNow) {
       for (const c of D.cpus) {
-        if (!c.buyable || c.socket !== cpuNow.socket) continue;
-        const gain = normalizedGain(cpuNowScore, cpuScore(c, profile));
+        if (!c.buyable) continue;
+        const scoreAfter = cpuScore(c, profile);
+        const gain = normalizedGain(cpuNowScore, scoreAfter);
         if (gain < 0.06) continue;
+
+        const sameSocket = c.socket === cpuNow.socket;
+        let motherboard = null;
+        let requiredRam = null;
+        let companionCost = 0;
+
+        if (!sameSocket) {
+          // Prefer a board that matches the CPU's native memory generation.
+          motherboard = pickMotherboard(c.socket, c.ddr);
+          if (!motherboard) continue;
+          companionCost += motherboard.price;
+          if (c.ddr !== currentRamGen) {
+            requiredRam = pickRequiredRam(c.ddr, currentCapacity, profile);
+            if (!requiredRam) continue;
+            companionCost += requiredRam.price;
+          }
+          // Platform switches need a meaningful uplift to justify the bundle.
+          if (gain < 0.12) continue;
+        }
+
+        if (sameSocket) sameSocketCount += 1;
+        else platformSwitchCount += 1;
+
         cpuOpts.push({
           key: 'cpu',
           item: c,
           gain,
           price: c.price,
-          scoreAfter: cpuScore(c, profile)
+          companionCost,
+          scoreAfter,
+          motherboard,
+          requiredRam,
+          sameSocket
         });
       }
-      if (!cpuOpts.length) {
+      if (!sameSocketCount && platformSwitchCount) {
         const socketName = D.meta.sockets[cpuNow.socket] || cpuNow.socket;
-        notes.push('The ' + socketName + ' platform has no useful same-socket CPU upgrade left. A faster CPU requires a new motherboard and memory.');
+        notes.push('No useful drop-in CPU remains on ' + socketName + '. Faster options below include the motherboard' + (currentRamGen === 'DDR4' ? ' and DDR5 memory' : '') + ' those platforms need.');
+      } else if (!cpuOpts.length) {
+        const socketName = D.meta.sockets[cpuNow.socket] || cpuNow.socket;
+        notes.push('The ' + socketName + ' platform has no useful CPU upgrade left inside this catalog.');
       }
     }
 
@@ -319,17 +383,21 @@ window.PCEngine = (function () {
       }
     }
 
-    // RAM options: at least as much capacity as today, faster or larger.
-    const ramOpts = [];
+    // RAM options keyed by generation so a platform switch can pick matching kits.
+    const ramOptsByGen = { DDR4: [], DDR5: [] };
     for (const kit of D.ramKits) {
       if (!kit.buyable) continue;
-      if (kit.gen !== (input.ram.gen || (input.cpu.item && input.cpu.item.ddr) || 'DDR5')) continue;
-      if (kit.capacity < (Number(input.ram.totalGB) || 0)) continue;
+      if (kit.capacity < currentCapacity) continue;
       const after = ramScore({ capacityGB: kit.capacity, gen: kit.gen, speed: kit.speed, modules: kit.modules }, profile);
-      const gain = normalizedGain(ramNowScore, after);
-      if (gain < 0.05) continue;
-      ramOpts.push({ key: 'ram', item: kit, gain, price: kit.price, scoreAfter: after });
+      const baseline = kit.gen === currentRamGen ? ramNowScore : 0;
+      const gain = kit.gen === currentRamGen
+        ? normalizedGain(ramNowScore, after)
+        : clamp(after / 100, 0, 1) * 0.85;
+      if (kit.gen === currentRamGen && gain < 0.05) continue;
+      const opt = { key: 'ram', item: kit, gain, price: kit.price, scoreAfter: after };
+      if (ramOptsByGen[kit.gen]) ramOptsByGen[kit.gen].push(opt);
     }
+    const ramOpts = ramOptsByGen[currentRamGen] || [];
 
     // Storage options only exist when the user actually described a drive.
     const storageOpts = [];
@@ -345,42 +413,89 @@ window.PCEngine = (function () {
     // Keep "do nothing" in the enumeration so the planner only buys useful parts.
     const gpuList = [null].concat(gpuOpts);
     const cpuList = [null].concat(cpuOpts);
-    const ramList = [null].concat(ramOpts);
     const storageList = [null].concat(storageOpts);
 
     let best = null;
     for (const g of gpuList) {
       for (const c of cpuList) {
-        for (const r of ramList) {
+        // Same-socket builds keep the installed memory generation (e.g. LGA1700
+        // DDR4 boards). Platform switches adopt the new CPU's native DDR.
+        const effectiveDdr = c ? (c.sameSocket ? currentRamGen : c.item.ddr) : currentRamGen;
+        const ramChoices = [null].concat(ramOptsByGen[effectiveDdr] || []);
+        for (const r of ramChoices) {
           for (const s of storageList) {
             let spend = 0;
             let weighted = 0;
+            let ramPick = r;
+            let forcedRam = null;
+
             if (g) { spend += g.price; weighted += g.gain * profile.weights.gpu; }
-            if (c) { spend += c.price; weighted += c.gain * profile.weights.cpu; }
-            if (r) { spend += r.price; weighted += r.gain * profile.weights.ram; }
+            if (c) {
+              spend += c.price;
+              weighted += c.gain * profile.weights.cpu;
+              if (c.motherboard) spend += c.motherboard.price;
+              if (c.requiredRam && !r) {
+                forcedRam = c.requiredRam;
+                spend += forcedRam.price;
+                const after = ramScore({
+                  capacityGB: forcedRam.capacity,
+                  gen: forcedRam.gen,
+                  speed: forcedRam.speed,
+                  modules: forcedRam.modules
+                }, profile);
+                weighted += normalizedGain(ramNowScore, after) * profile.weights.ram;
+              }
+            }
+            if (r) {
+              // Skip a same-gen kit that is not an upgrade when staying put.
+              if (!c && r.item.gen !== currentRamGen) continue;
+              spend += r.price;
+              weighted += r.gain * profile.weights.ram;
+            }
             if (s) { spend += s.price; weighted += s.gain * profile.weights.storage; }
 
-            const needed = requiredPsu(c ? c.item : cpuNow, g ? g.item : gpuNow);
+            const cpuAfterItem = c ? c.item : cpuNow;
+            const gpuAfterItem = g ? g.item : gpuNow;
+            const needed = requiredPsu(cpuAfterItem, gpuAfterItem);
+            const preferAtx31 = !!(gpuAfterItem && gpuAfterItem.tdp >= 200);
             let psuPick = null;
             if (currentPsu && needed > currentPsu + 25) {
-              psuPick = D.psus
-                .filter((p) => p.buyable && p.wattage >= needed)
-                .sort((a, b2) => a.price - b2.price)[0];
+              psuPick = pickPsu(needed, preferAtx31);
               if (!psuPick) continue;
               spend += psuPick.price;
               weighted += 0.02 * profile.weights.psu;
             }
             if (spend > b) continue;
 
+            const cpuAfter = c ? c.scoreAfter : cpuNowScore;
+            const gpuAfter = g ? g.scoreAfter : gpuNowScore;
             const utilization = spend / b;
             let score = weighted * 100 + utilization * 4.5;
-            // A small nudge toward filling the biggest relative gap.
+            score -= balancePenalty(cpuAfter, gpuAfter, profile);
+
+            // Prefer filling the biggest current gap, and prefer drop-in CPUs
+            // when the performance gain is similar to a platform switch.
             const gaps = { cpu: 1 - cpuNowScore / 100, gpu: 1 - gpuNowScore / 100, ram: 1 - ramNowScore / 100 };
             const biggest = Object.keys(gaps).sort((x, y) => gaps[y] - gaps[x])[0];
-            if ((biggest === 'cpu' && c) || (biggest === 'gpu' && g) || (biggest === 'ram' && r)) score += 1.5;
+            if ((biggest === 'cpu' && c) || (biggest === 'gpu' && g) || (biggest === 'ram' && (r || forcedRam))) score += 1.5;
+            if (c && c.sameSocket) score += 0.8;
+            if (c && !c.sameSocket) score -= 0.6;
 
             if (!best || score > best.score + 0.0001 || (Math.abs(score - best.score) < 0.0001 && spend < best.spend)) {
-              best = { score, spend, g, c, r, s, psuPick, weighted, needed };
+              best = {
+                score,
+                spend,
+                g,
+                c,
+                r: ramPick,
+                forcedRam,
+                s,
+                psuPick,
+                weighted,
+                needed,
+                cpuAfter,
+                gpuAfter
+              };
             }
           }
         }
@@ -430,21 +545,55 @@ window.PCEngine = (function () {
         upgrade: best.c.item,
         gain: best.c.gain,
         price: best.c.price,
-        why: cpuWhy(cpuNow, best.c.item, profile),
-        alt: pickAlt(cpuOpts, best.c, 'cpu')
+        why: cpuWhy(cpuNow, best.c.item, profile, best.c),
+        alt: pickAlt(cpuOpts.filter((o) => o.sameSocket === best.c.sameSocket), best.c, 'cpu'),
+        companion: !best.c.sameSocket
       });
+      if (best.c.motherboard) {
+        plan.push({
+          key: 'motherboard',
+          label: 'Motherboard',
+          current: null,
+          currentText: (D.meta.sockets[cpuNow.socket] || cpuNow.socket) + ' board',
+          upgrade: best.c.motherboard,
+          gain: 0,
+          price: best.c.motherboard.price,
+          why: 'Required for ' + best.c.item.model + ' (' + (D.meta.sockets[best.c.item.socket] || best.c.item.socket) + ', ' + best.c.motherboard.ddr + ').',
+          alt: null,
+          companion: true
+        });
+      }
     }
-    if (best.r) {
+
+    const ramUpgrade = best.r
+      ? best.r.item
+      : (best.forcedRam || null);
+    if (ramUpgrade) {
+      const ramGain = best.r
+        ? best.r.gain
+        : normalizedGain(
+          ramNowScore,
+          ramScore({
+            capacityGB: ramUpgrade.capacity,
+            gen: ramUpgrade.gen,
+            speed: ramUpgrade.speed,
+            modules: ramUpgrade.modules
+          }, profile)
+        );
+      const ramAlts = ramOptsByGen[ramUpgrade.gen] || [];
       plan.push({
         key: 'ram',
         label: 'Memory',
         current: null,
         currentText: (input.ram.totalGB || '?') + ' GB ' + (input.ram.gen || '') + (input.ram.speed ? '-' + input.ram.speed : '') + ' (' + input.ram.slotsUsed + '/' + input.ram.slotsTotal + ' slots)',
-        upgrade: best.r.item,
-        gain: best.r.gain,
-        price: best.r.price,
-        why: ramWhy(input, best.r.item),
-        alt: pickAlt(ramOpts, best.r, 'ram')
+        upgrade: ramUpgrade,
+        gain: ramGain,
+        price: ramUpgrade.price,
+        why: best.forcedRam && !best.r
+          ? 'Required because ' + best.c.item.model + ' uses ' + ramUpgrade.gen + '. Replaces the current ' + currentRamGen + ' kit.'
+          : ramWhy(input, ramUpgrade),
+        alt: best.r ? pickAlt(ramAlts, best.r, 'ram') : null,
+        companion: !!(best.forcedRam && !best.r)
       });
     }
     if (best.s) {
@@ -469,18 +618,26 @@ window.PCEngine = (function () {
         upgrade: best.psuPick,
         gain: 0,
         price: best.psuPick.price,
-        why: 'The planned parts need about ' + best.needed + ' W. This unit covers that with headroom and a native 12V-2x6 connector.',
-        alt: null
+        why: 'The planned parts need about ' + best.needed + ' W. This unit covers that with headroom' + (best.psuPick.atx31 ? ' and a native 12V-2x6 connector.' : '.'),
+        alt: null,
+        companion: true
       });
     }
 
     // Notes that depend on the final plan
+    if (best.c && !best.c.sameSocket) {
+      notes.push('This CPU needs a new ' + (D.meta.sockets[best.c.item.socket] || best.c.item.socket) + ' motherboard' + (best.c.requiredRam || (best.r && best.r.item.gen !== currentRamGen) ? ' and matching memory' : '') + '. Confirm cooler mounting and case clearance.');
+    }
     if (plan.some((p) => p.key === 'ram')) {
-      notes.push('Desktop memory prices are high right now. Add capacity only if you are running out.');
+      notes.push('Desktop memory prices are high right now. Add capacity only if you are running out, or when a platform switch forces a new generation.');
+    }
+    if (best.cpuAfter != null && best.gpuAfter != null && Math.abs(best.cpuAfter - best.gpuAfter) > 28) {
+      const weaker = best.cpuAfter < best.gpuAfter ? 'CPU' : 'GPU';
+      notes.push('After this plan the ' + weaker + ' is still the likely bottleneck for ' + profile.label.toLowerCase() + '.');
     }
     if (currentPsu == null) {
       const needed = best.needed;
-      notes.push('Power supply wattage is unknown, so the estimate assumes 650 W. The recommended parts need about ' + needed + ' W in total. Check the PSU label before buying.');
+      notes.push('Power supply wattage is unknown. The recommended parts need about ' + needed + ' W in total. Check the PSU label before buying.');
     } else if (!best.psuPick && currentPsu < best.needed) {
       notes.push('The current PSU is close to the estimated load. Leave headroom if it is old or a budget model.');
     }
@@ -521,7 +678,19 @@ window.PCEngine = (function () {
       const active = new Set((activePlan || []).map((p) => p.key));
       const out = [];
       if (!active.has('gpu')) out.push({ label: 'GPU', reason: 'No worthwhile upgrade within the budget.' });
-      if (!active.has('cpu')) out.push({ label: 'CPU', reason: cpuOpts.length ? 'Not the best use of the remaining budget.' : 'No same-socket upgrade is available.' });
+      if (!active.has('cpu')) {
+        out.push({
+          label: 'CPU',
+          reason: cpuOpts.length
+            ? 'Not the best use of the remaining budget once companion parts are included.'
+            : 'No useful CPU upgrade fits the budget, including platform switches.'
+        });
+      }
+      if (!active.has('motherboard') && active.has('cpu')) {
+        // Drop-in CPU kept the existing board.
+      } else if (!active.has('motherboard')) {
+        out.push({ label: 'Motherboard', reason: 'Kept with the current CPU platform.' });
+      }
       if (!active.has('ram')) out.push({ label: 'Memory', reason: ramNowScore >= 65 ? 'Capacity and speed are sufficient.' : 'The gain does not justify current memory prices.' });
       if (!active.has('storage') && storageNowScore >= 60) out.push({ label: 'Storage', reason: 'Fast enough. Capacity is your call.' });
       if (!active.has('psu')) out.push({ label: 'PSU', reason: currentPsu ? currentPsu + ' W is enough for this plan.' : 'Kept as is. Check the label.' });
@@ -550,8 +719,11 @@ window.PCEngine = (function () {
     return 'About ' + gain + '% higher score for ' + profile.label.toLowerCase() + ', with ' + after.vram + ' GB VRAM and ' + (after.brand === 'NVIDIA' ? 'DLSS 4' : after.brand === 'AMD' ? 'FSR 4' : 'XeSS') + '.';
   }
 
-  function cpuWhy(before, after, profile) {
+  function cpuWhy(before, after, profile, option) {
     const socket = D.meta.sockets[after.socket] || after.socket;
+    if (option && !option.sameSocket) {
+      return 'Platform switch to ' + socket + ': ' + after.cores + ' cores / ' + after.threads + ' threads, ' + after.tdp + ' W. Companion parts are listed below.';
+    }
     return 'Fits ' + socket + ': ' + after.cores + ' cores / ' + after.threads + ' threads, ' + after.tdp + ' W.';
   }
 
