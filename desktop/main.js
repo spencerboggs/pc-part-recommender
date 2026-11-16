@@ -29,14 +29,13 @@ function writePriceCache(data) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, JSON.stringify(data));
   } catch (error) {
-    // The bundled snapshot remains available if the cache cannot be written.
+    // Fall back to the bundled snapshot if the cache cannot be written.
   }
 }
 
 async function getPrices() {
   const cached = readPriceCache();
-  // Refresh once per Pacific calendar day so the date the user sees matches
-  // the day the snapshot was checked, not a rolling 24-hour window.
+  // Refetch when the cache is not from today's Pacific date.
   if (cached && cached.checked === pacificDate()) {
     return { ...cached, cached: true };
   }

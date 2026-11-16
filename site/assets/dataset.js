@@ -201,8 +201,7 @@ window.PCData = (function () {
     { id: 'toshiba-x300-8', model: 'Toshiba X300 8TB', kind: 'HDD', read: 200, capacity: 8000, price: 219, buyable: true }
   ];
 
-  // Representative boards per platform. Used as companion parts when a CPU
-  // recommendation changes socket or memory generation.
+  // Boards suggested when a CPU upgrade needs a new socket or DDR generation.
   const motherboards = [
     { id: 'mb-am5-b650', model: 'MSI B650 Gaming Plus WiFi', brand: 'MSI', socket: 'AM5', chipset: 'B650', ddr: 'DDR5', form: 'ATX', dimms: 4, price: 159, buyable: true },
     { id: 'mb-am5-x870', model: 'Gigabyte X870 Gaming WiFi6', brand: 'Gigabyte', socket: 'AM5', chipset: 'X870', ddr: 'DDR5', form: 'ATX', dimms: 4, price: 249, buyable: true },

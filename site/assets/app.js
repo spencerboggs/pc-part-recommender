@@ -61,13 +61,13 @@
   function specLine(kind, item) {
     if (!item) return '';
     if (kind === 'cpu') {
-      return `${item.cores}C / ${item.threads}T · ${D.meta.sockets[item.socket] || item.socket} · ${item.tdp} W · ${item.buyable ? 'current' : 'legacy'}`;
+      return `${item.cores}C / ${item.threads}T - ${D.meta.sockets[item.socket] || item.socket} - ${item.tdp} W - ${item.buyable ? 'current' : 'legacy'}`;
     }
-    if (kind === 'gpu') return `${item.brand} · ${item.vram} GB · ${item.tdp} W · ${item.buyable ? 'current' : 'legacy'}`;
-    if (kind === 'ram') return `${item.gen}-${item.speed} · ${item.capacity} GB · ${item.modules} modules`;
-    if (kind === 'storage') return `${item.kind} · ${Math.round(item.capacity / 1000)} TB · ${item.read.toLocaleString()} MB/s`;
-    if (kind === 'motherboard') return `${D.meta.sockets[item.socket] || item.socket} · ${item.chipset} · ${item.ddr} · ${item.form}`;
-    if (kind === 'psu') return `${item.wattage} W · ${item.rating}${item.atx31 ? ' · ATX 3.1' : ''}`;
+    if (kind === 'gpu') return `${item.brand} - ${item.vram} GB - ${item.tdp} W - ${item.buyable ? 'current' : 'legacy'}`;
+    if (kind === 'ram') return `${item.gen}-${item.speed} - ${item.capacity} GB - ${item.modules} modules`;
+    if (kind === 'storage') return `${item.kind} - ${Math.round(item.capacity / 1000)} TB - ${item.read.toLocaleString()} MB/s`;
+    if (kind === 'motherboard') return `${D.meta.sockets[item.socket] || item.socket} - ${item.chipset} - ${item.ddr} - ${item.form}`;
+    if (kind === 'psu') return `${item.wattage} W - ${item.rating}${item.atx31 ? ' - ATX 3.1' : ''}`;
     return '';
   }
 
@@ -219,7 +219,7 @@
       input.removeAttribute('aria-invalid');
     } else if (opts.detected) {
       state.cpu.status = 'detected';
-      setStatus(statusEl, 'detected', 'Detected · not in catalog');
+      setStatus(statusEl, 'detected', 'Detected - not in catalog');
       setCard('cpu-card', 'partial');
       setChips(meta, [{ text: 'Detected on this PC. Pick the closest match', tone: 'warn' }]);
       input.removeAttribute('aria-invalid');
@@ -277,7 +277,7 @@
       input.removeAttribute('aria-invalid');
     } else if (opts.detected) {
       state.gpu.status = 'detected';
-      setStatus(statusEl, 'detected', 'Detected · not in catalog');
+      setStatus(statusEl, 'detected', 'Detected - not in catalog');
       setCard('gpu-card', 'partial');
       setChips(meta, [{ text: 'Detected on this PC. Pick the closest match', tone: 'warn' }]);
       input.removeAttribute('aria-invalid');
@@ -337,14 +337,14 @@
 
     if (parsed.gen && parsed.speed) {
       state.ram.status = 'valid';
-      setStatus(statusEl, 'valid', `${state.ram.gen}-${state.ram.speed} · ${size} GB`);
+      setStatus(statusEl, 'valid', `${state.ram.gen}-${state.ram.speed} - ${size} GB`);
       setCard('ram-card', 'valid');
       setChips(meta, chips);
     } else if (typeText && !parsed.gen && !parsed.speed) {
       state.ram.status = 'unknown';
       setStatus(statusEl, 'unknown', 'RAM type not recognized');
       setCard('ram-card', 'unknown');
-      setChips(meta, chips.concat([{ text: 'Try “DDR5-6000”', tone: 'bad' }]));
+      setChips(meta, chips.concat([{ text: 'Try "DDR5-6000"', tone: 'bad' }]));
     } else if (!typeText && cpuDdr) {
       state.ram.status = 'partial';
       setStatus(statusEl, 'partial', 'Type inferred from CPU');
@@ -472,7 +472,7 @@
       return;
     }
     if (valid.length) {
-      setStatus(statusEl, 'valid', `${valid.length} drive${valid.length > 1 ? 's' : ''} · ${(totalGB / 1000).toFixed(totalGB >= 10000 ? 0 : 1)} TB`);
+      setStatus(statusEl, 'valid', `${valid.length} drive${valid.length > 1 ? 's' : ''} - ${(totalGB / 1000).toFixed(totalGB >= 10000 ? 0 : 1)} TB`);
       setCard('storage-card', 'valid');
     } else if (withCap.length) {
       setStatus(statusEl, 'partial', `${(totalGB / 1000).toFixed(1)} TB noted`);
@@ -509,7 +509,7 @@
       state.psu.item = p;
       state.psu.status = 'valid';
       state.psu.wattage = p.wattage;
-      setStatus(statusEl, 'valid', `${p.wattage} W · ${p.rating}`);
+      setStatus(statusEl, 'valid', `${p.wattage} W - ${p.rating}`);
       setCard('psu-card', 'valid');
       setChips(meta, [
         { text: p.brand, tone: 'accent' },
@@ -523,7 +523,7 @@
       const w = parseFloat(wattInput.value) || 0;
       state.psu.wattage = w;
       state.psu.status = 'partial';
-      setStatus(statusEl, 'partial', raw ? 'Model unknown · ' + w + ' W noted' : w + ' W noted');
+      setStatus(statusEl, 'partial', raw ? 'Model unknown - ' + w + ' W noted' : w + ' W noted');
       setCard('psu-card', 'partial');
       setChips(meta, [{ text: 'Wattage is enough to plan with', tone: 'warn' }]);
     } else {
@@ -684,14 +684,14 @@
   function renderResults(result) {
     const plan = result.plan || [];
     const hasPlan = plan.length > 0;
-    $('#results-meta').textContent = D.profiles[state.profile].label + ' · ' + E.money(result.budget) + ' budget · prices checked ' + D.meta.priceCheckedShort;
+    $('#results-meta').textContent = D.profiles[state.profile].label + ' - ' + E.money(result.budget) + ' budget - prices checked ' + D.meta.priceCheckedShort;
     $('#results-heading').textContent = 'Upgrade plan';
     $('#results-empty').hidden = hasPlan;
     $('#upgrade-table').hidden = !hasPlan;
 
     const m = result.metrics;
     const tiles = [
-      { label: 'Parts total', value: E.money(m.total), sub: 'of ' + E.money(m.budget) + ' · before tax', accent: true },
+      { label: 'Parts total', value: E.money(m.total), sub: 'of ' + E.money(m.budget) + ' - before tax', accent: true },
       { label: 'Estimated gain', value: hasPlan ? '+' + m.uplift + '%' : '0%', sub: D.profiles[state.profile].label + ' profile' },
       { label: 'Budget left', value: E.money(Math.max(0, m.remaining)), sub: hasPlan ? (m.remaining > 0 ? 'kept in reserve' : 'fully used') : 'nothing committed' },
       {
@@ -709,7 +709,7 @@
       .join('');
 
     const priceSub = 'GPU, CPU and memory checked ' + D.meta.priceCheckedShort + '; storage and PSU are estimates';
-    $('#table-sub').textContent = hasPlan ? plan.length + ' part' + (plan.length > 1 ? 's' : '') + ' · ' + priceSub : priceSub + '.';
+    $('#table-sub').textContent = hasPlan ? plan.length + ' part' + (plan.length > 1 ? 's' : '') + ' - ' + priceSub : priceSub + '.';
 
     if (hasPlan) {
       $('#upgrade-body').innerHTML = plan.map(rowHtml).join('');
@@ -753,8 +753,8 @@
   function rowHtml(row) {
     const u = row.upgrade;
     let currentSpec = '';
-    if (row.key === 'cpu' && row.current) currentSpec = `${row.current.cores}C/${row.current.threads}T · ${D.meta.sockets[row.current.socket] || row.current.socket}`;
-    if (row.key === 'gpu' && row.current) currentSpec = `${row.current.brand} · ${row.current.vram} GB · ${row.current.tdp} W`;
+    if (row.key === 'cpu' && row.current) currentSpec = `${row.current.cores}C/${row.current.threads}T - ${D.meta.sockets[row.current.socket] || row.current.socket}`;
+    if (row.key === 'gpu' && row.current) currentSpec = `${row.current.brand} - ${row.current.vram} GB - ${row.current.tdp} W`;
     if (row.key === 'ram') currentSpec = '';
     if (row.key === 'storage' && row.current) currentSpec = row.current.item ? row.current.item.kind : 'Capacity only';
     if (row.key === 'motherboard') currentSpec = 'Existing board';
@@ -778,7 +778,7 @@
         ${alt}
       </td>
       <td data-label="Est. gain" class="num">${gain}</td>
-      <td data-label="Price" class="num"><a class="price-val price-link" href="${esc(listingUrl(u.model))}" target="_blank" rel="noopener noreferrer" title="Check current listings for ${esc(u.model)}">${E.money(row.price)}</a><span class="row-sub price-note">${u.priceChecked ? 'checked ' + D.meta.priceCheckedShort + ' · Newegg' : 'estimate · check listings'}</span></td>
+      <td data-label="Price" class="num"><a class="price-val price-link" href="${esc(listingUrl(u.model))}" target="_blank" rel="noopener noreferrer" title="Check current listings for ${esc(u.model)}">${E.money(row.price)}</a><span class="row-sub price-note">${u.priceChecked ? 'checked ' + D.meta.priceCheckedShort + ' - Newegg' : 'estimate - check listings'}</span></td>
     </tr>`;
   }
 
@@ -797,12 +797,12 @@
     const hadPlan = !$('#results').hidden;
     if (hadPlan) $('#results').hidden = true;
     if (btn) btn.disabled = true;
-    setScan('Reading hardware…', 'busy');
+    setScan('Reading hardware...', 'busy');
     try {
       const hw = await desktop.getHardware();
       applyHardware(hw);
       const count = hw.summaryCount || 0;
-      setScan('Scanned in ' + (hw.elapsedMs || 0) + ' ms · ' + count + ' device' + (count === 1 ? '' : 's') + ' found' + (hw.psuAvailable ? '' : ' · PSU needs manual entry'), 'ok');
+      setScan('Scanned in ' + (hw.elapsedMs || 0) + ' ms - ' + count + ' device' + (count === 1 ? '' : 's') + ' found' + (hw.psuAvailable ? '' : ' - PSU needs manual entry'), 'ok');
     } catch (err) {
       setScan('Hardware scan failed. Enter parts below.', 'err');
     } finally {
@@ -885,7 +885,7 @@
       const data = await desktop.getPrices();
       applyPriceData(data);
     } catch (error) {
-      // Keep the bundled or cached snapshot if the refresh fails.
+      // Keep the bundled or cached snapshot on failure.
     }
   }
 
@@ -895,7 +895,7 @@
     document.body.classList.add('is-desktop');
     const mode = $('#mode-tag');
     if (mode) mode.textContent = 'desktop';
-    // Root-relative links are meaningless inside the packaged app.
+    // Root-relative links do not work inside the packaged app.
     $$('a[href^="/"]').forEach((a) => {
       const href = a.getAttribute('href');
       if (!href || href.startsWith('//')) return;

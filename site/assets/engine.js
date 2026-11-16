@@ -311,8 +311,7 @@ window.PCEngine = (function () {
     const currentRamGen = input.ram.gen || (cpuNow && cpuNow.ddr) || 'DDR5';
     const currentCapacity = Number(input.ram.totalGB) || 0;
 
-    // CPU options: same-socket drop-ins, plus platform switches that pull in
-    // a motherboard and, when memory generation changes, a matching RAM kit.
+    // Same-socket CPUs, or other sockets with a board (and RAM if DDR changes).
     const cpuOpts = [];
     let sameSocketCount = 0;
     let platformSwitchCount = 0;
@@ -329,7 +328,6 @@ window.PCEngine = (function () {
         let companionCost = 0;
 
         if (!sameSocket) {
-          // Prefer a board that matches the CPU's native memory generation.
           motherboard = pickMotherboard(c.socket, c.ddr);
           if (!motherboard) continue;
           companionCost += motherboard.price;
@@ -338,7 +336,7 @@ window.PCEngine = (function () {
             if (!requiredRam) continue;
             companionCost += requiredRam.price;
           }
-          // Platform switches need a meaningful uplift to justify the bundle.
+          // Cross-socket picks need enough gain to cover companion cost.
           if (gain < 0.12) continue;
         }
 
@@ -383,7 +381,7 @@ window.PCEngine = (function () {
       }
     }
 
-    // RAM options keyed by generation so a platform switch can pick matching kits.
+    // RAM options by DDR generation.
     const ramOptsByGen = { DDR4: [], DDR5: [] };
     for (const kit of D.ramKits) {
       if (!kit.buyable) continue;
@@ -418,8 +416,7 @@ window.PCEngine = (function () {
     let best = null;
     for (const g of gpuList) {
       for (const c of cpuList) {
-        // Same-socket builds keep the installed memory generation (e.g. LGA1700
-        // DDR4 boards). Platform switches adopt the new CPU's native DDR.
+        // Keep current DDR on same-socket upgrades; use the new CPU's DDR otherwise.
         const effectiveDdr = c ? (c.sameSocket ? currentRamGen : c.item.ddr) : currentRamGen;
         const ramChoices = [null].concat(ramOptsByGen[effectiveDdr] || []);
         for (const r of ramChoices) {
@@ -473,8 +470,7 @@ window.PCEngine = (function () {
             let score = weighted * 100 + utilization * 4.5;
             score -= balancePenalty(cpuAfter, gpuAfter, profile);
 
-            // Prefer filling the biggest current gap, and prefer drop-in CPUs
-            // when the performance gain is similar to a platform switch.
+            // Prefer fixing the weakest part, and same-socket CPUs when gains are close.
             const gaps = { cpu: 1 - cpuNowScore / 100, gpu: 1 - gpuNowScore / 100, ram: 1 - ramNowScore / 100 };
             const biggest = Object.keys(gaps).sort((x, y) => gaps[y] - gaps[x])[0];
             if ((biggest === 'cpu' && c) || (biggest === 'gpu' && g) || (biggest === 'ram' && (r || forcedRam))) score += 1.5;
@@ -686,9 +682,7 @@ window.PCEngine = (function () {
             : 'No useful CPU upgrade fits the budget, including platform switches.'
         });
       }
-      if (!active.has('motherboard') && active.has('cpu')) {
-        // Drop-in CPU kept the existing board.
-      } else if (!active.has('motherboard')) {
+      if (!active.has('motherboard') && !active.has('cpu')) {
         out.push({ label: 'Motherboard', reason: 'Kept with the current CPU platform.' });
       }
       if (!active.has('ram')) out.push({ label: 'Memory', reason: ramNowScore >= 65 ? 'Capacity and speed are sufficient.' : 'The gain does not justify current memory prices.' });
