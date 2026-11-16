@@ -33,7 +33,9 @@ scripts/
 
 ## Website
 
-No build step. Serve the folder over HTTP (the scripts are classic scripts, so `file://` also works for a quick check, but a server is cleaner):
+You can use the online version: `https://spencerboggs.github.io/pc-part-recommender/`.
+
+Or you can host the site yourself:
 
 ```bash
 npm run serve        # http://127.0.0.1:4173
@@ -42,14 +44,6 @@ npx serve site
 # or
 python -m http.server 8000 --directory site
 ```
-
-The page uses relative asset paths, so it works at a project-page URL such as `https://spencerboggs.github.io/pc-part-recommender/`.
-
-To publish, push the repo, open **Settings → Pages**, and set the source to **GitHub Actions**. The included workflow uploads `site/` on pushes to `main`.
-
-The header and download section point at the latest GitHub release asset:
-`https://github.com/spencerboggs/pc-part-recommender/releases/latest/download/pc-upgrade-advisor-v1.0.0-windows-x64.exe`.
-Create a release and attach `release/pc-upgrade-advisor-v1.0.0-windows-x64.exe` with that exact filename. The binary stays out of the repository. The asset name includes the package version, so update the two release URLs in `site/index.html` when the version changes. If the repository name changes, update those URLs as well.
 
 ## Desktop app
 
