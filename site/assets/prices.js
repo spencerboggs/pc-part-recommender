@@ -1,7 +1,7 @@
 window.PCPriceData = {
   "source": "Newegg via ComponentPrices",
   "sourceUrl": "https://componentprices.com/",
-  "checked": "2026-11-21",
+  "checked": "2026-11-22",
   "prices": {
     "rtx-5090": 6349.99,
     "rtx-5080": 2199.99,
